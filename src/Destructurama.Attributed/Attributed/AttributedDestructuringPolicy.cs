@@ -25,9 +25,20 @@ namespace Destructurama.Attributed
 {
     class AttributedDestructuringPolicy : IDestructuringPolicy
     {
+        public LoggingLevelSwitch LevelSwitch { get; }
+
+        public AttributedDestructuringPolicy(LoggingLevelSwitch levelSwitch)
+        {
+            LevelSwitch = levelSwitch;
+        }
+
+        public AttributedDestructuringPolicy()
+        {
+        }
+
         readonly object _cacheLock = new object();
         readonly HashSet<Type> _ignored = new HashSet<Type>();
-        readonly Dictionary<Type, Func<object, ILogEventPropertyValueFactory, LogEventPropertyValue>> _cache = new Dictionary<Type, Func<object, ILogEventPropertyValueFactory, LogEventPropertyValue>>(); 
+        readonly Dictionary<Type, Func<object, ILogEventPropertyValueFactory, LogEventPropertyValue>> _cache = new Dictionary<Type, Func<object, ILogEventPropertyValueFactory, LogEventPropertyValue>>();
 
         public bool TryDestructure(object value, ILogEventPropertyValueFactory propertyValueFactory, out LogEventPropertyValue result)
         {
@@ -63,11 +74,19 @@ namespace Destructurama.Attributed
                     .ToList();
                 if (properties.Any(pi =>
                     pi.GetCustomAttribute<LogAsScalarAttribute>() != null ||
-                    pi.GetCustomAttribute<NotLoggedAttribute>() != null))
+                    pi.GetCustomAttribute<NotLoggedAttribute>() != null ||
+                    pi.GetCustomAttribute<NotLoggedAboveAttribute>() != null))
                 {
                     var loggedProperties = properties
-                        .Where(pi => pi.GetCustomAttribute<NotLoggedAttribute>() == null)
-                        .ToList();
+                            .Where(pi => pi.GetCustomAttribute<NotLoggedAttribute>() == null && pi.GetCustomAttribute<NotLoggedAboveAttribute>() == null)
+                            .ToList();
+                    if (LevelSwitch != null)
+                    {
+                        var additionalProperties = properties.Where(pi => pi.GetCustomAttribute<NotLoggedAttribute>() == null && pi.GetCustomAttribute<NotLoggedAboveAttribute>() != null &&
+                                                                          pi.GetCustomAttribute<NotLoggedAboveAttribute>().DesiredLevel >= LevelSwitch.MinimumLevel)
+                            .ToList();
+                        loggedProperties.AddRange(additionalProperties);
+                    }
 
                     var scalars = loggedProperties
                         .Where(pi => pi.GetCustomAttribute<LogAsScalarAttribute>() != null)
@@ -78,7 +97,7 @@ namespace Destructurama.Attributed
                 }
                 else
                 {
-                    lock(_cacheLock)
+                    lock (_cacheLock)
                         _ignored.Add(t);
                 }
             }
@@ -127,6 +146,5 @@ namespace Destructurama.Attributed
         {
             return new ScalarValue(stringify ? value.ToString() : value);
         }
-
     }
 }

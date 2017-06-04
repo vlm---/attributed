@@ -15,6 +15,7 @@
 using Destructurama.Attributed;
 using Serilog;
 using Serilog.Configuration;
+using Serilog.Core;
 
 namespace Destructurama
 {
@@ -30,6 +31,16 @@ namespace Destructurama
         public static LoggerConfiguration UsingAttributes(this LoggerDestructuringConfiguration configuration)
         {
             return configuration.With<AttributedDestructuringPolicy>();
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="configuration">The logger configuration to apply configuration to.</param>
+        /// <param name="levelSwitch">Level switch to work with <see cref="NotLoggedAboveAttribute"/></param>
+        /// <returns>An object allowing configuration to continue.</returns>
+        public static LoggerConfiguration UsingAttributes(this LoggerDestructuringConfiguration configuration, LoggingLevelSwitch levelSwitch)
+        {
+            return configuration.With(new AttributedDestructuringPolicy(levelSwitch));
         }
     }
 }
