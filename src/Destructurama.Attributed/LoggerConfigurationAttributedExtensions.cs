@@ -31,6 +31,15 @@ namespace Destructurama
         {
             return configuration.With<AttributedDestructuringPolicy>();
         }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="configuration">The logger configuration to apply configuration to.</param>
+        /// <returns>An object allowing configuration to continue.</returns>
+        public static LoggerConfiguration UsingAttributesConcurrent(this LoggerDestructuringConfiguration configuration)
+        {
+            return configuration.With<AttributedDestructuringPolicyConcurrent>();
+        }
     }
 }
 
