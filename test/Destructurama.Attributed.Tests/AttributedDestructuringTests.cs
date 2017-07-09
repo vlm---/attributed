@@ -24,13 +24,13 @@ namespace Destructurama.Attributed.Tests
         [NotLogged]
         public string Ignored { get; set; }
 
-        [NotLoggedAbove(LogEventLevel.Debug)]
+        [LoggedOnlyAt(LogEventLevel.Debug)]
         public int IgnoredAboveDebug { get; set; }
 
-        [NotLoggedAbove(LogEventLevel.Warning)]
+        [LoggedOnlyAt(LogEventLevel.Warning)]
         public int IgnoredAboveWarning { get; set; }
 
-        [NotLoggedAbove(LogEventLevel.Information)]
+        [LoggedOnlyAt(LogEventLevel.Information)]
         [NotLogged]
         public int IgnoredAlways { get; set; }
 

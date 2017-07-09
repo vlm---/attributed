@@ -36,7 +36,7 @@ namespace Destructurama
         /// <summary>
         /// </summary>
         /// <param name="configuration">The logger configuration to apply configuration to.</param>
-        /// <param name="levelSwitch">Level switch to work with <see cref="NotLoggedAboveAttribute"/></param>
+        /// <param name="levelSwitch">Level switch to work with <see cref="LoggedOnlyAtAttribute"/></param>
         /// <returns>An object allowing configuration to continue.</returns>
         public static LoggerConfiguration UsingAttributes(this LoggerDestructuringConfiguration configuration, LoggingLevelSwitch levelSwitch)
         {

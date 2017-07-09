@@ -75,15 +75,15 @@ namespace Destructurama.Attributed
                 if (properties.Any(pi =>
                     pi.GetCustomAttribute<LogAsScalarAttribute>() != null ||
                     pi.GetCustomAttribute<NotLoggedAttribute>() != null ||
-                    pi.GetCustomAttribute<NotLoggedAboveAttribute>() != null))
+                    pi.GetCustomAttribute<LoggedOnlyAtAttribute>() != null))
                 {
                     var loggedProperties = properties
-                            .Where(pi => pi.GetCustomAttribute<NotLoggedAttribute>() == null && pi.GetCustomAttribute<NotLoggedAboveAttribute>() == null)
+                            .Where(pi => pi.GetCustomAttribute<NotLoggedAttribute>() == null && pi.GetCustomAttribute<LoggedOnlyAtAttribute>() == null)
                             .ToList();
                     if (LevelSwitch != null)
                     {
-                        var additionalProperties = properties.Where(pi => pi.GetCustomAttribute<NotLoggedAttribute>() == null && pi.GetCustomAttribute<NotLoggedAboveAttribute>() != null &&
-                                                                          pi.GetCustomAttribute<NotLoggedAboveAttribute>().DesiredLevel >= LevelSwitch.MinimumLevel)
+                        var additionalProperties = properties.Where(pi => pi.GetCustomAttribute<NotLoggedAttribute>() == null && pi.GetCustomAttribute<LoggedOnlyAtAttribute>() != null &&
+                                                                          pi.GetCustomAttribute<LoggedOnlyAtAttribute>().DesiredLevel >= LevelSwitch.MinimumLevel)
                             .ToList();
                         loggedProperties.AddRange(additionalProperties);
                     }
