@@ -114,6 +114,24 @@ namespace Destructurama.Attributed.Tests
             Assert.AreEqual(3, props["IgnoredAboveWarning"].LiteralValue());
             Assert.IsFalse(props.ContainsKey("IgnoredAlways"));
             Assert.IsInstanceOf<NotAScalar>(props["ScalarAnyway"].LiteralValue());
+
+            levelSwitch.MinimumLevel = LogEventLevel.Information;
+
+            log.Information("Here is {@Customized}", _testItem);
+
+            sv = (StructureValue)evt.Properties["Customized"];
+            props = sv.Properties.ToDictionary(p => p.Name, p => p.Value);
+
+            Assert.IsInstanceOf<ImmutableScalar>(props["ImmutableScalar"].LiteralValue());
+            Assert.AreEqual(new MutableScalar().ToString(), props["MutableScalar"].LiteralValue());
+            Assert.IsInstanceOf<StructureValue>(props["NotAScalar"]);
+            Assert.IsFalse(props.ContainsKey("Ignored"));
+            Assert.IsFalse(log.IsEnabled(LogEventLevel.Debug));
+            Assert.IsFalse(props.ContainsKey("IgnoredAboveDebug"));
+            Assert.IsTrue(log.IsEnabled(LogEventLevel.Warning));
+            Assert.IsFalse(props.ContainsKey("IgnoredAboveWarning"));
+            Assert.IsFalse(props.ContainsKey("IgnoredAlways"));
+            Assert.IsInstanceOf<NotAScalar>(props["ScalarAnyway"].LiteralValue());
         }
     }
 }
