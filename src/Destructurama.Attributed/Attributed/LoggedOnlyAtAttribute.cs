@@ -5,7 +5,7 @@ namespace Destructurama.Attributed
 {
     /// <summary>
     /// Specified that a property should be included when destructuring an object only when logging level is higher than desired level.
-    /// When logging switch is not provided <see cref="LoggedOnlyAtAttribute"/> behaves same as <see cref="NotLoggedAttribute"/>
+    /// When logging switch is not provided <see cref="LoggedOnlyAtAttribute" /> behaves the same as <see cref="NotLoggedAttribute" />
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
     public class LoggedOnlyAtAttribute : Attribute
