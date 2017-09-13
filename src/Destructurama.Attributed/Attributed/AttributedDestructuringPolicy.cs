@@ -25,24 +25,29 @@ namespace Destructurama.Attributed
 {
     class AttributedDestructuringPolicy : IDestructuringPolicy
     {
-        public LoggingLevelSwitch LevelSwitch { get; }
-
         public AttributedDestructuringPolicy(LoggingLevelSwitch levelSwitch)
         {
-            LevelSwitch = levelSwitch;
+            _levelSwitch = levelSwitch;
+            foreach (var level in Enum.GetValues(typeof(LogEventLevel)).OfType<LogEventLevel>())
+            {
+                _cache[level] = new Dictionary<Type, Func<object, ILogEventPropertyValueFactory, LogEventPropertyValue>>();
+            }
         }
 
-        public AttributedDestructuringPolicy()
+        public AttributedDestructuringPolicy() : this(null)
         {
         }
 
+        readonly LoggingLevelSwitch _levelSwitch;
         readonly object _cacheLock = new object();
         readonly HashSet<Type> _ignored = new HashSet<Type>();
-        readonly Dictionary<Type, Func<object, ILogEventPropertyValueFactory, LogEventPropertyValue>> _cache = new Dictionary<Type, Func<object, ILogEventPropertyValueFactory, LogEventPropertyValue>>();
+        readonly Dictionary<LogEventLevel, Dictionary<Type, Func<object, ILogEventPropertyValueFactory, LogEventPropertyValue>>> _cache = new Dictionary<LogEventLevel, Dictionary<Type, Func<object, ILogEventPropertyValueFactory, LogEventPropertyValue>>>();
+
 
         public bool TryDestructure(object value, ILogEventPropertyValueFactory propertyValueFactory, out LogEventPropertyValue result)
         {
             var t = value.GetType();
+            var level = _levelSwitch?.MinimumLevel ?? LogEventLevel.Information;
             lock (_cacheLock)
             {
                 if (_ignored.Contains(t))
@@ -52,7 +57,7 @@ namespace Destructurama.Attributed
                 }
 
                 Func<object, ILogEventPropertyValueFactory, LogEventPropertyValue> cached;
-                if (_cache.TryGetValue(t, out cached))
+                if (_cache[level].TryGetValue(t, out cached))
                 {
                     result = cached(value, propertyValueFactory);
                     return true;
@@ -65,7 +70,7 @@ namespace Destructurama.Attributed
             if (logAsScalar != null)
             {
                 lock (_cacheLock)
-                    _cache[t] = (o, f) => MakeScalar(o, logAsScalar.IsMutable);
+                    _cache[level][t] = (o, f) => MakeScalar(o, logAsScalar.IsMutable);
 
             }
             else
@@ -80,10 +85,10 @@ namespace Destructurama.Attributed
                     var loggedProperties = properties
                             .Where(pi => pi.GetCustomAttribute<NotLoggedAttribute>() == null && pi.GetCustomAttribute<LoggedOnlyAtAttribute>() == null)
                             .ToList();
-                    if (LevelSwitch != null)
+                    if (_levelSwitch != null)
                     {
                         var additionalProperties = properties.Where(pi => pi.GetCustomAttribute<NotLoggedAttribute>() == null && pi.GetCustomAttribute<LoggedOnlyAtAttribute>() != null &&
-                                                                          pi.GetCustomAttribute<LoggedOnlyAtAttribute>().DesiredLevel >= LevelSwitch.MinimumLevel)
+                                                                          pi.GetCustomAttribute<LoggedOnlyAtAttribute>().DesiredLevel >= _levelSwitch.MinimumLevel)
                             .ToList();
                         loggedProperties.AddRange(additionalProperties);
                     }
@@ -93,7 +98,7 @@ namespace Destructurama.Attributed
                         .ToDictionary(pi => pi, pi => pi.GetCustomAttribute<LogAsScalarAttribute>().IsMutable);
 
                     lock (_cacheLock)
-                        _cache[t] = (o, f) => MakeStructure(o, loggedProperties, scalars, f, t);
+                        _cache[level][t] = (o, f) => MakeStructure(o, loggedProperties, scalars, f, t);
                 }
                 else
                 {
